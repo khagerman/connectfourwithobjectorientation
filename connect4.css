@@ -7,20 +7,26 @@
 }
 
 /* pieces are div within game table cells: draw as colored circles */
+h1,
+h2,
+h3,
+form {
+  text-align: center;
+  font-family: "Open Sans", sans-serif;
+}
 
+#game {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
 .piece {
   margin: 5px;
   width: 80%;
   height: 80%;
   border-radius: 50%;
-}
-
-.piece.p1 {
-  background-color: red;
-}
-
-.piece.p2 {
-  background-color: blue;
 }
 
 /* column-top is table row of clickable areas for each column */

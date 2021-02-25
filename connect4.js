@@ -6,18 +6,19 @@
  */
 
 class Game {
-  constructor(HEIGHT = 6, WIDTH = 7) {
+  constructor(p1, p2, HEIGHT = 6, WIDTH = 7) {
     this.HEIGHT = HEIGHT;
     this.WIDTH = WIDTH;
-    // this.p1 = 1;
-    // this.p2 = 2;
-    this.currPlayer = 1;
+    this.players = [p1, p2];
+    this.currPlayer = p1;
     this.makeBoard();
     this.makeHtmlBoard();
+    this.gameOver = false;
   }
 
   makeBoard() {
     this.board = [];
+
     for (let y = 0; y < this.HEIGHT; y++) {
       this.board.push(Array.from({ length: this.WIDTH }));
     }
@@ -28,7 +29,8 @@ class Game {
     // make column tops (clickable area for adding a piece to that column)
     const top = document.createElement("tr");
     top.setAttribute("id", "column-top");
-    top.addEventListener("click", this.handleClick);
+    this.handleGameClick = this.handleClick.bind(this);
+    top.addEventListener("click", this.handleGameClick);
 
     for (let x = 0; x < this.WIDTH; x++) {
       const headCell = document.createElement("td");
@@ -62,7 +64,8 @@ class Game {
   placeInTable(y, x) {
     const piece = document.createElement("div");
     piece.classList.add("piece");
-    piece.classList.add(`p${this.currPlayer}`);
+    piece.style.backgroundColor = this.currPlayer.color;
+
     // piece.style.top = -50 * (y + 2);
 
     const spot = document.getElementById(`${y}-${x}`);
@@ -70,7 +73,8 @@ class Game {
   }
   endGame(msg) {
     alert(msg);
-    location.reload;
+    const top = document.querySelector("#column-top");
+    top.removeEventListener("click", this.handleGameClick);
   }
   handleClick(evt) {
     // get x from ID of clicked cell
@@ -86,32 +90,35 @@ class Game {
 
     // check for win
     if (this.checkForWin()) {
-      return this.endGame(`Player ${this.currPlayer} won!`);
+      this.gameOver = true;
+      this.currPlayer =
+        this.currPlayer === this.players[0] ? this.players[1] : this.players[0];
+      setTimeout(
+        () => this.endGame(`Player ${this.currPlayer.color} won!`),
+        400
+      );
     }
 
     // check for tie
     if (this.board.every((row) => row.every((cell) => cell))) {
-      return this.endGame("Tie!");
+      setTimeout(() => this.endGame(`Board full---it's a tie!`), 400);
     }
 
     // switch players
-    this.currPlayer = this.currPlayer === 1 ? 2 : 1;
+    this.currPlayer =
+      this.currPlayer === this.players[0] ? this.players[1] : this.players[0];
   }
   checkForWin() {
-    function _win(cells) {
-      // Check four cells to see if they're all color of current player
-      //  - cells: list of four (y, x) cells
-      //  - returns true if all are legal coordinates & all match currPlayer
-
-      return cells.every(
-        ([y, x]) =>
+    const _win = (cells) =>
+      cells.every(([y, x]) => {
+        return (
           y >= 0 &&
           y < this.HEIGHT &&
           x >= 0 &&
           x < this.WIDTH &&
-          board[y][x] === currPlayer
-      );
-    }
+          this.board[y][x] === this.currPlayer
+        );
+      });
 
     for (let y = 0; y < this.HEIGHT; y++) {
       for (let x = 0; x < this.WIDTH; x++) {
@@ -156,10 +163,20 @@ class Game {
 // place piece in board and add to HTML table
 
 /** checkForWin: check board cell-by-cell for "does a win start here?" */
-function start() {
-  const startGameBtn = document.querySelector("form");
-  startGameBtn.addEventListener("submit", function () {
-    new Game(6, 7);
-  });
+class Player {
+  constructor(color) {
+    this.color = color;
+  }
 }
-new Game(6, 7);
+
+const startGameBtn = document.querySelector("form");
+startGameBtn.addEventListener("submit", function (e) {
+  let p1 = new Player(document.querySelector("#player1").value);
+  let p2 = new Player(document.querySelector("#player2").value);
+  new Game(p1, p2);
+  e.preventDefault();
+});
+const gameBtn = document.querySelector("button");
+gameBtn.addEventListener("dblclick", function (e) {
+  location.reload();
+});
